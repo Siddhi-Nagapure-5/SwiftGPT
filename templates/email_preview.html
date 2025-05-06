@@ -1,0 +1,219 @@
+{% extends "layout.html" %}
+
+{% block title %}SwiftGPT - Email Preview{% endblock %}
+
+{% block content %}
+<h1 class="mb-3">Email Preview</h1>
+
+<div class="panel">
+    <h2 class="panel-title">Generated Email</h2>
+    
+    <div class="email-preview">
+        <div class="email-preview-header">
+            <div class="email-subject" id="email-subject">{{ subject }}</div>
+        </div>
+        <div class="email-preview-body" id="email-body">
+            {{ body|safe }}
+        </div>
+    </div>
+    
+    <div class="form-actions">
+        <button id="preview-email-btn" class="btn btn-secondary">
+            <i class="fas fa-eye mr-1"></i> Refresh Preview
+        </button>
+        <a href="{{ url_for('generate_email') }}" class="btn btn-secondary">
+            <i class="fas fa-redo mr-1"></i> Regenerate
+        </a>
+    </div>
+</div>
+
+<div class="panel mt-4">
+    <h2 class="panel-title">Send Email</h2>
+    
+    <div class="row mb-3">
+        <div class="col">
+            <h3 class="mb-2">Upload Contacts</h3>
+            <form action="{{ url_for('upload_contacts') }}" method="post" enctype="multipart/form-data" class="mb-4">
+                <div class="form-group">
+                    <div class="file-upload">
+                        <input type="file" class="file-upload-input" id="contact-file" name="contact_file" accept=".csv">
+                        <label for="contact-file" class="file-upload-label">
+                            <i class="fas fa-upload"></i> <span>Choose CSV file</span>
+                        </label>
+                    </div>
+                    <small class="form-text text-muted mt-1">CSV should include columns: name, email, tags (optional)</small>
+                </div>
+                <button type="submit" class="btn btn-secondary" id="upload-contacts-btn" disabled>
+                    <i class="fas fa-cloud-upload-alt mr-1"></i> Upload Contacts
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <label for="tags-input" class="form-label">Filter Contacts by Tags</label>
+        <div class="input-group">
+            <input type="text" class="form-control" id="tags-input" placeholder="Enter tags separated by commas">
+            <div class="input-group-append">
+                <button class="btn btn-secondary" type="button" id="tag-filter">
+                    <i class="fas fa-filter mr-1"></i> Filter
+                </button>
+            </div>
+        </div>
+        <div id="tag-container" class="tags-container mt-2"></div>
+        <small class="form-text text-muted">Enter comma-separated tags to filter your contacts.</small>
+    </div>
+    
+    <div class="form-group">
+        <label class="form-label">Select Recipients</label>
+        <div class="contact-list" id="contact-list">
+            <div class="text-center p-3 text-muted">
+                <i class="fas fa-info-circle mr-1"></i> Use the tag filter above to show contacts.
+            </div>
+        </div>
+        <div class="selected-info mt-2 text-muted">
+            <small><span id="selected-count">0</span> contacts selected</small>
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="schedule-checkbox">
+            <label class="form-check-label" for="schedule-checkbox">Schedule for later</label>
+        </div>
+    </div>
+    
+    <div id="schedule-options" style="display: none;">
+        <div class="form-row">
+            <div class="form-col">
+                <div class="form-group">
+                    <label for="schedule-date" class="form-label">Date</label>
+                    <input type="date" class="form-control" id="schedule-date" name="schedule_date" required>
+                </div>
+            </div>
+            <div class="form-col">
+                <div class="form-group">
+                    <label for="schedule-time" class="form-label">Time</label>
+                    <input type="time" class="form-control" id="schedule-time" name="schedule_time" required>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="form-actions">
+        <form action="{{ url_for('send_email') }}" method="post" id="send-form">
+            <input type="hidden" name="subject" value="{{ subject }}">
+            <input type="hidden" name="body" value="{{ body }}">
+            <button type="submit" class="btn btn-primary" id="send-email-btn" disabled>
+                <i class="fas fa-paper-plane mr-1"></i> Send Now
+            </button>
+        </form>
+        
+        <form action="{{ url_for('schedule_email_route') }}" method="post" id="schedule-form">
+            <input type="hidden" name="subject" value="{{ subject }}">
+            <input type="hidden" name="body" value="{{ body }}">
+            <input type="hidden" name="schedule_date" id="schedule-date-hidden">
+            <input type="hidden" name="schedule_time" id="schedule-time-hidden">
+            <button type="submit" class="btn btn-success" id="schedule-email-btn" disabled>
+                <i class="fas fa-clock mr-1"></i> Schedule
+            </button>
+        </form>
+    </div>
+</div>
+
+<div id="email-preview-container" style="display: none;"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/email.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const scheduleCheckbox = document.getElementById('schedule-checkbox');
+        const scheduleOptions = document.getElementById('schedule-options');
+        const sendForm = document.getElementById('send-form');
+        const scheduleForm = document.getElementById('schedule-form');
+        const scheduleDate = document.getElementById('schedule-date');
+        const scheduleTime = document.getElementById('schedule-time');
+        const scheduleDateHidden = document.getElementById('schedule-date-hidden');
+        const scheduleTimeHidden = document.getElementById('schedule-time-hidden');
+        
+        // Toggle schedule options visibility
+        scheduleCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                scheduleOptions.style.display = 'block';
+                sendForm.style.display = 'none';
+                scheduleForm.style.display = 'block';
+            } else {
+                scheduleOptions.style.display = 'none';
+                sendForm.style.display = 'block';
+                scheduleForm.style.display = 'none';
+            }
+        });
+        
+        // Initialize date/time inputs with current datetime + 1 hour
+        const now = new Date();
+        now.setHours(now.getHours() + 1);
+        
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        scheduleDate.value = `${year}-${month}-${day}`;
+        
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        scheduleTime.value = `${hours}:${minutes}`;
+        
+        // Update hidden fields before submission
+        scheduleForm.addEventListener('submit', function() {
+            scheduleDateHidden.value = scheduleDate.value;
+            scheduleTimeHidden.value = scheduleTime.value;
+        });
+        
+        // Transfer selected contacts between forms
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.name === 'contact_ids') {
+                // Clone the checked checkbox to the other form
+                const checkboxes = document.querySelectorAll('input[name="contact_ids"]:checked');
+                
+                // Clear existing hidden inputs
+                const existingInputs = sendForm.querySelectorAll('input[name="contact_ids"]');
+                existingInputs.forEach(input => input.remove());
+                
+                const existingScheduleInputs = scheduleForm.querySelectorAll('input[name="contact_ids"]');
+                existingScheduleInputs.forEach(input => input.remove());
+                
+                // Add new hidden inputs for selected contacts
+                checkboxes.forEach(checkbox => {
+                    const sendInput = document.createElement('input');
+                    sendInput.type = 'hidden';
+                    sendInput.name = 'contact_ids';
+                    sendInput.value = checkbox.value;
+                    sendForm.appendChild(sendInput);
+                    
+                    const scheduleInput = document.createElement('input');
+                    scheduleInput.type = 'hidden';
+                    scheduleInput.name = 'contact_ids';
+                    scheduleInput.value = checkbox.value;
+                    scheduleForm.appendChild(scheduleInput);
+                });
+                
+                // Update button states
+                const sendBtn = document.getElementById('send-email-btn');
+                const scheduleBtn = document.getElementById('schedule-email-btn');
+                
+                if (checkboxes.length > 0) {
+                    sendBtn.disabled = false;
+                    scheduleBtn.disabled = false;
+                } else {
+                    sendBtn.disabled = true;
+                    scheduleBtn.disabled = true;
+                }
+                
+                // Update counter
+                const selectedCount = document.getElementById('selected-count');
+                selectedCount.textContent = checkboxes.length;
+            }
+        });
+    });
+</script>
+{% endblock %}

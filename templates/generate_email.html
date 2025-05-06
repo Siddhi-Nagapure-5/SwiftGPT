@@ -1,0 +1,177 @@
+{% extends "layout.html" %}
+
+{% block title %}SwiftGPT - Generate Email{% endblock %}
+
+{% block content %}
+<h1 class="mb-3">Generate Email</h1>
+
+<div class="panel">
+    <p class="mb-3">Use AI to generate an email based on your prompt. Select an agent to customize the style and tone of your message.</p>
+    
+    <form action="{{ url_for('generate_email') }}" method="post" class="needs-validation">
+        <div class="form-group">
+            <label for="agent_id" class="form-label">Select Agent (Optional)</label>
+            <select class="form-control" id="agent_id" name="agent_id">
+                <option value="">Default Email Assistant</option>
+                {% for agent in agents %}
+                    <option value="{{ agent.id }}">{{ agent.name }} - {{ agent.role }}</option>
+                {% endfor %}
+            </select>
+            <small class="form-text text-muted">Choose an agent to define the tone and style of your email.</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="prompt" class="form-label">Email Prompt</label>
+            <textarea class="form-control" id="prompt" name="prompt" rows="5" placeholder="Describe what you want in your email, e.g., 'Write a follow-up email to a client about our meeting yesterday regarding the new project proposal.'" required></textarea>
+            <small class="form-text text-muted">Provide details about the purpose, recipient, and content of your email.</small>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-magic mr-1"></i> Generate Email
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="panel mt-4">
+    <h2 class="panel-title">Prompt Examples</h2>
+    <p>Need inspiration? Try one of these example prompts:</p>
+    
+    <div class="row">
+        <div class="col">
+            <div class="card mb-3 prompt-example">
+                <div class="card-title">
+                    <i class="fas fa-handshake mr-1"></i> Business Introduction
+                </div>
+                <div class="card-body">
+                    <p>"Write an email introducing our company to a potential client. We offer web development services and want to highlight our expertise in e-commerce solutions."</p>
+                    <button type="button" class="btn btn-secondary btn-sm use-prompt-btn">
+                        <i class="fas fa-copy mr-1"></i> Use This Prompt
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card mb-3 prompt-example">
+                <div class="card-title">
+                    <i class="fas fa-calendar-check mr-1"></i> Meeting Follow-up
+                </div>
+                <div class="card-body">
+                    <p>"Write a follow-up email thanking the team for attending yesterday's project kickoff meeting and summarizing the key points and next steps."</p>
+                    <button type="button" class="btn btn-secondary btn-sm use-prompt-btn">
+                        <i class="fas fa-copy mr-1"></i> Use This Prompt
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card mb-3 prompt-example">
+                <div class="card-title">
+                    <i class="fas fa-gift mr-1"></i> Special Offer
+                </div>
+                <div class="card-body">
+                    <p>"Write an email announcing a special 20% discount on all our products for the next week to celebrate our company's anniversary."</p>
+                    <button type="button" class="btn btn-secondary btn-sm use-prompt-btn">
+                        <i class="fas fa-copy mr-1"></i> Use This Prompt
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Example prompt functionality
+        const promptExamples = document.querySelectorAll('.prompt-example');
+        const promptInput = document.getElementById('prompt');
+        
+        promptExamples.forEach(example => {
+            const usePromptBtn = example.querySelector('.use-prompt-btn');
+            usePromptBtn.addEventListener('click', function() {
+                const promptText = example.querySelector('p').textContent.trim();
+                promptInput.value = promptText.replace(/^"|"$/g, ''); // Remove quotes
+                
+                // Scroll to form
+                promptInput.scrollIntoView({ behavior: 'smooth' });
+                
+                // Highlight with animation
+                promptInput.style.backgroundColor = 'rgba(155, 124, 238, 0.2)';
+                setTimeout(() => {
+                    promptInput.style.transition = 'background-color 1s ease';
+                    promptInput.style.backgroundColor = '';
+                }, 100);
+                
+                // Focus on the textarea
+                promptInput.focus();
+            });
+        });
+        
+        // Add loading state to form submission
+        const form = document.querySelector('form');
+        const submitBtn = form.querySelector('button[type="submit"]');
+        
+        form.addEventListener('submit', function() {
+            // Disable button and show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Generating...';
+            
+            // Add a loading overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'loading-overlay';
+            overlay.innerHTML = `
+                <div class="loading-content">
+                    <div class="spinner"></div>
+                    <p>Generating your email with AI...</p>
+                    <p class="text-muted">This may take a few moments</p>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        });
+        
+        // Style for the loading overlay
+        const style = document.createElement('style');
+        style.textContent = `
+            .loading-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(19, 18, 32, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+            }
+            
+            .loading-content {
+                text-align: center;
+                padding: 2rem;
+                background-color: var(--bg-medium);
+                border-radius: var(--border-radius);
+                box-shadow: var(--box-shadow);
+            }
+            
+            .spinner {
+                border: 4px solid rgba(155, 124, 238, 0.3);
+                border-radius: 50%;
+                border-top: 4px solid var(--accent-color);
+                width: 50px;
+                height: 50px;
+                margin: 0 auto 1rem;
+                animation: spin 1s linear infinite;
+            }
+            
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    });
+</script>
+{% endblock %}

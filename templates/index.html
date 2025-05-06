@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+
+{% block title %}SwiftGPT - AI Email Generation{% endblock %}
+
+{% block content %}
+<section class="hero animate-fadeIn">
+    <h1>Welcome to Swift<span style="background: linear-gradient(90deg, #6a11cb, #2575fc); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">GPT</span></h1>
+    <p class="hero-subtitle">Intelligent email generation and scheduling with AI-powered agents</p>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Get Started</a>
+</section>
+
+<div class="row mb-4">
+    <div class="col">
+        <div class="panel expanding-panel">
+            <h2 class="panel-title">About Us</h2>
+            <p>SwiftGPT is a cutting-edge platform that combines the power of AI with efficient email communication. Our sophisticated AI agents are designed to adapt to various communication styles, making email creation effortless and personalized.</p>
+            <p>Built on top of state-of-the-art language models, our platform provides you with tools to create customized AI agents, each with unique communication styles and capabilities. Whether you need formal business communication or casual conversational emails, SwiftGPT has you covered.</p>
+        </div>
+    </div>
+    <div class="col">
+        <div class="panel expanding-panel">
+            <h2 class="panel-title">Our Mission</h2>
+            <p>At SwiftGPT, our mission is to revolutionize digital communication by making intelligent, context-aware email generation accessible to everyone. We believe that technology should enhance human connection, not replace it.</p>
+            <p>We're committed to building tools that save you time, reduce communication stress, and help you deliver the right message with the perfect tone every time. By combining advanced AI with intuitive user interfaces, we aim to set a new standard for digital communication tools.</p>
+        </div>
+    </div>
+</div>
+
+<section class="features mb-4">
+    <h2 class="text-center mb-3">Key Features</h2>
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-robot mr-2"></i> Custom AI Agents
+                </div>
+                <div class="card-body">
+                    <p>Create personalized AI agents with distinct personalities, communication styles, and objectives to match your specific needs.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-envelope mr-2"></i> Smart Email Generation
+                </div>
+                <div class="card-body">
+                    <p>Generate perfectly crafted emails with just a brief prompt, saving you time while maintaining your unique voice.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-clock mr-2"></i> Intelligent Scheduling
+                </div>
+                <div class="card-body">
+                    <p>Plan and schedule your emails for optimal delivery times, ensuring your messages reach recipients when they're most receptive.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta text-center p-4 mb-3">
+    <h3>Ready to transform your email communication?</h3>
+    <p>Start creating intelligent, personalized emails that save time and deliver results.</p>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-primary mt-2">Explore SwiftGPT</a>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Custom animation for homepage
+    document.addEventListener('DOMContentLoaded', function() {
+        const animateElements = document.querySelectorAll('.card');
+        
+        animateElements.forEach((element, index) => {
+            element.style.opacity = '0';
+            element.style.transform = 'translateY(20px)';
+            element.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            
+            setTimeout(() => {
+                element.style.opacity = '1';
+                element.style.transform = 'translateY(0)';
+            }, 300 + (index * 150));
+        });
+    });
+</script>
+{% endblock %}

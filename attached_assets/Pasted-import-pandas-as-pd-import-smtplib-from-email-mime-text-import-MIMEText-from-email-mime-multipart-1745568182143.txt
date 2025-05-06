@@ -1,0 +1,122 @@
+import pandas as pd
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from apscheduler.schedulers.blocking import BlockingScheduler
+import time
+from datetime import datetime, timedelta
+from transformers import LlamaForCausalLM, LlamaTokenizer, pipeline, AutoModelForCausalLM, AutoTokenizer
+from huggingface_hub import login
+import torch
+import random
+
+HUGGINGFACE_TOKEN = "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"
+login(token=HUGGINGFACE_TOKEN)
+
+model_id = "meta-llama/Llama-2-7b-chat-hf"
+tokenizer = AutoTokenizer.from_pretrained(model_id, use_auth_token=True)
+model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.float16, device_map="auto", use_auth_token=True)
+generator = pipeline("text-generation", model=model, tokenizer=tokenizer, device_map="auto", torch_dtype=torch.float16)
+
+MODEL_NAME = "meta-llama/Llama-2-7b-hf"
+SMTP_SERVER = "smtp.gmail.com"
+SMTP_PORT = 587
+EMAIL_ADDRESS = ""
+EMAIL_PASSWORD = ""
+
+class Agent:
+    def __init__(self, name, role, goal, backstory):
+        self.name = name
+        self.role = role
+        self.goal = goal
+        self.backstory = backstory
+
+    def __repr__(self):
+        return f"Name: {self.name}, Role: {self.role}, Goal: {self.goal}, Backstory: {self.backstory}"
+
+class Task:
+    def __init__(self, description, agent=None):
+        self.description = description
+        self.agent = agent
+
+    def __repr__(self):
+        return f"Task: {self.description}, Assigned to: {self.agent.name if self.agent else 'None'}"
+
+def initialize_agents():
+    default_agents = [
+        {"name": "Formal Agent", "role": "Communicator", "goal": "Assist with formal communication.", "backstory": "An expert in delivering messages with professional tone and etiquette."},
+        {"name": "Informal Agent", "role": "Conversationalist", "goal": "Engage in casual and friendly conversations.", "backstory": "A relaxed and friendly character, perfect for informal chats."},
+        {"name": "Semi-Formal Agent", "role": "Mediator", "goal": "Blend formal and informal communication styles.", "backstory": "Balances professional and personal tones for versatile communication."}
+    ]
+    return [Agent(**agent_data) for agent_data in default_agents]
+
+def parse_tags(tag_string):
+    return [tag.strip() for tag in tag_string.split(',')]
+
+def filter_contacts_by_tags(tags, contacts_df):
+    return contacts_df[contacts_df['Tags'].apply(lambda x: any(tag in parse_tags(x) for tag in tags))]
+
+def generate_email(prompt: str, max_length=200, timeout=30) -> str:
+    try:
+        system_prompt = """You are a professional email assistant. Generate a concise email based on the user's request.
+        Include a subject line, proper greeting, body content, and closing.
+        Keep the email professional and to the point."""
+        full_prompt = f"{system_prompt}\nUser Request: {prompt}\nAssistant:"
+        generation_kwargs = {
+            'max_new_tokens': max_length,
+            'do_sample': True,
+            'temperature': 0.7,
+            'top_k': 50,
+            'top_p': 0.95,
+            'num_return_sequences': 1,
+            'timeout': timeout 
+        }
+        outputs = generator(full_prompt, **generation_kwargs)
+        if outputs and len(outputs) > 0:
+            email_content = outputs[0]['generated_text'].split("Assistant:")[-1].strip()
+            return email_content
+        else:
+            return "Unable to generate email content. Please try again."
+    except Exception as e:
+        print(f"Error in email generation: {e}")
+        return f"Email generation failed: {e}"
+    return email_content
+
+def preview_email(subject, body):
+    print("\n" + "="*50)
+    print("EMAIL PREVIEW")
+    print("="*50)
+    print(f"SUBJECT: {subject}")
+    print("-"*50)
+    print(f"BODY:\n{body}")
+    print("="*50)
+
+def send_email_from_prompt():
+    user_prompt = input("Enter your email request (e.g., 'Write an email about upcoming class assignment'): ")
+    subject, body = generate_email_content(user_prompt)
+    preview_email(subject, body)
+    contacts_df = pd.read_csv("contacts.csv")
+    all_tags = set()
+    for tags in contacts_df['Tags'].dropna():
+        all_tags.update([tag.strip() for tag in tags.split(',')])
+    print("\nAvailable contact tags:")
+    print(", ".join(sorted(all_tags)))
+    user_tags = input("\nEnter tag(s) to filter contacts (comma-separated): ").strip()
+    tags_list = [tag.strip() for tag in user_tags.split(',')]
+    filtered_contacts = filter_contacts_by_tags(tags_list, contacts_df)
+    if filtered_contacts.empty:
+        print(f"No contacts found with tag(s): {user_tags}")
+        return
+    print(f"\nFound {len(filtered_contacts)} contacts with the specified tag(s).")
+    confirm = input("Send email to these contacts? (y/n): ").lower()
+    if confirm != 'y':
+        print("Email sending cancelled.")
+        return
+    success_count = 0
+    for _, contact in filtered_contacts.iterrows():
+        if pd.notna(contact['Email ID']):
+            create_and_send_email(contact['Email ID'], subject, body)
+            success_count += 1
+    print(f"\nEmail sent to {success_count} out of {len(filtered_contacts)} contacts.")
+
+send_email_from_prompt()

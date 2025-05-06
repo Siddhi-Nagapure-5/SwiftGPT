@@ -1,0 +1,113 @@
+{% extends "layout.html" %}
+
+{% block title %}SwiftGPT - Schedule Email{% endblock %}
+
+{% block content %}
+<h1 class="mb-3">Schedule Email</h1>
+
+<div class="panel">
+    <h2 class="panel-title">Email Details</h2>
+    
+    <div class="email-preview">
+        <div class="email-preview-header">
+            <div class="email-subject">{{ subject }}</div>
+        </div>
+        <div class="email-preview-body">
+            {{ body|safe }}
+        </div>
+    </div>
+    
+    <div class="form-group mt-4">
+        <h3 class="mb-2">Selected Recipients</h3>
+        <div class="recipients-list">
+            {% if recipients %}
+                <ul class="list-unstyled">
+                    {% for recipient in recipients %}
+                        <li>
+                            <i class="fas fa-user mr-1"></i> {{ recipient.name }} ({{ recipient.email }})
+                            {% if recipient.tags %}
+                                <div class="contact-tags">
+                                    {% for tag in recipient.tags.split(',') %}
+                                        <span class="contact-tag">{{ tag.strip() }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="text-muted">No recipients selected</div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <form action="{{ url_for('schedule_email_route') }}" method="post">
+        <input type="hidden" name="subject" value="{{ subject }}">
+        <input type="hidden" name="body" value="{{ body }}">
+        {% for recipient in recipients %}
+            <input type="hidden" name="contact_ids" value="{{ recipient.id }}">
+        {% endfor %}
+        
+        <div class="form-row">
+            <div class="form-col">
+                <div class="form-group">
+                    <label for="schedule-date" class="form-label">Date</label>
+                    <input type="date" class="form-control" id="schedule-date" name="schedule_date" required>
+                </div>
+            </div>
+            <div class="form-col">
+                <div class="form-group">
+                    <label for="schedule-time" class="form-label">Time</label>
+                    <input type="time" class="form-control" id="schedule-time" name="schedule_time" required>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <a href="{{ url_for('email_preview') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left mr-1"></i> Back to Preview
+            </a>
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-calendar-check mr-1"></i> Schedule Email
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize date/time inputs with current datetime + 1 hour
+        const now = new Date();
+        now.setHours(now.getHours() + 1);
+        
+        const scheduleDate = document.getElementById('schedule-date');
+        const scheduleTime = document.getElementById('schedule-time');
+        
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        scheduleDate.value = `${year}-${month}-${day}`;
+        
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        scheduleTime.value = `${hours}:${minutes}`;
+        
+        // Validate that scheduled time is in the future
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            const selectedDate = new Date(`${scheduleDate.value}T${scheduleTime.value}`);
+            const currentDate = new Date();
+            
+            if (selectedDate <= currentDate) {
+                e.preventDefault();
+                alert('Please select a future date and time for scheduling.');
+                return false;
+            }
+            
+            return true;
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,153 @@
+{% extends "layout.html" %}
+
+{% block title %}SwiftGPT - Create Agent{% endblock %}
+
+{% block content %}
+<h1 class="mb-3">Create AI Agent</h1>
+
+<div class="panel">
+    <p class="mb-3">Create a custom AI agent with its own personality, communication style, and objectives. Your agent will help generate emails that match your specific needs.</p>
+    
+    <form action="{{ url_for('create_agent') }}" method="post" class="needs-validation">
+        <div class="form-group">
+            <label for="name" class="form-label">Agent Name</label>
+            <input type="text" class="form-control" id="name" name="name" placeholder="e.g., Formal Business Assistant" required>
+            <small class="form-text text-muted">Give your agent a descriptive name that reflects its purpose.</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="role" class="form-label">Role</label>
+            <input type="text" class="form-control" id="role" name="role" placeholder="e.g., Business Communication Expert" required>
+            <small class="form-text text-muted">Define the agent's specific role and expertise.</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="goal" class="form-label">Goal</label>
+            <input type="text" class="form-control" id="goal" name="goal" placeholder="e.g., Create professional emails with precise language" required>
+            <small class="form-text text-muted">What is this agent designed to achieve?</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="backstory" class="form-label">Backstory</label>
+            <textarea class="form-control" id="backstory" name="backstory" rows="4" placeholder="e.g., With years of experience in corporate communication, this agent specializes in creating clear, professional emails." required></textarea>
+            <small class="form-text text-muted">Provide context and personality for your agent.</small>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-plus-circle mr-1"></i> Create Agent
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="panel mt-4">
+    <h2 class="panel-title">Agent Templates</h2>
+    <p>Not sure where to start? Use one of our pre-designed templates to quickly create an agent.</p>
+    
+    <div class="row">
+        <div class="col">
+            <div class="card mb-3 expanding-panel template-card" data-template="formal">
+                <div class="card-title">
+                    <i class="fas fa-briefcase mr-1"></i> Formal Business Agent
+                </div>
+                <div class="card-body">
+                    <p>A professional agent that creates formal business communications with proper etiquette and precise language.</p>
+                    <button type="button" class="btn btn-secondary btn-sm use-template-btn">
+                        <i class="fas fa-copy mr-1"></i> Use Template
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card mb-3 expanding-panel template-card" data-template="informal">
+                <div class="card-title">
+                    <i class="fas fa-smile mr-1"></i> Casual Conversational Agent
+                </div>
+                <div class="card-body">
+                    <p>A friendly agent that creates warm, casual emails perfect for personal communication and building relationships.</p>
+                    <button type="button" class="btn btn-secondary btn-sm use-template-btn">
+                        <i class="fas fa-copy mr-1"></i> Use Template
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card mb-3 expanding-panel template-card" data-template="semi-formal">
+                <div class="card-title">
+                    <i class="fas fa-balance-scale mr-1"></i> Semi-Formal Agent
+                </div>
+                <div class="card-body">
+                    <p>A balanced agent that creates professional yet approachable emails for versatile communication needs.</p>
+                    <button type="button" class="btn btn-secondary btn-sm use-template-btn">
+                        <i class="fas fa-copy mr-1"></i> Use Template
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Agent template functionality
+        const templateCards = document.querySelectorAll('.template-card');
+        const nameInput = document.getElementById('name');
+        const roleInput = document.getElementById('role');
+        const goalInput = document.getElementById('goal');
+        const backstoryInput = document.getElementById('backstory');
+        
+        // Template data
+        const templates = {
+            formal: {
+                name: "Formal Agent",
+                role: "Communicator",
+                goal: "Assist with formal communication",
+                backstory: "An expert in delivering messages with professional tone and etiquette. Specializes in business correspondence, formal announcements, and official communications. Uses precise language, proper salutations, and maintains a respectful distance throughout all interactions."
+            },
+            informal: {
+                name: "Informal Agent",
+                role: "Conversationalist",
+                goal: "Engage in casual and friendly conversations",
+                backstory: "A relaxed and friendly character, perfect for informal chats. Uses conversational language, casual greetings, and relatable examples. Makes liberal use of contractions, occasional slang (where appropriate), and maintains a warm, approachable tone in all communications."
+            },
+            "semi-formal": {
+                name: "Semi-Formal Agent",
+                role: "Mediator",
+                goal: "Blend formal and informal communication styles",
+                backstory: "Balances professional and personal tones for versatile communication. Skilled at maintaining respect while building rapport, using appropriate levels of formality depending on context. Perfect for professional relationships that require a personal touch or building new business connections."
+            }
+        };
+        
+        // Add event listeners to template buttons
+        templateCards.forEach(card => {
+            const templateBtn = card.querySelector('.use-template-btn');
+            templateBtn.addEventListener('click', function() {
+                const templateType = card.dataset.template;
+                const template = templates[templateType];
+                
+                if (template) {
+                    nameInput.value = template.name;
+                    roleInput.value = template.role;
+                    goalInput.value = template.goal;
+                    backstoryInput.value = template.backstory;
+                    
+                    // Scroll to form
+                    document.querySelector('form').scrollIntoView({ behavior: 'smooth' });
+                    
+                    // Highlight fields with animation
+                    [nameInput, roleInput, goalInput, backstoryInput].forEach(input => {
+                        input.style.backgroundColor = 'rgba(155, 124, 238, 0.2)';
+                        setTimeout(() => {
+                            input.style.transition = 'background-color 1s ease';
+                            input.style.backgroundColor = '';
+                        }, 100);
+                    });
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

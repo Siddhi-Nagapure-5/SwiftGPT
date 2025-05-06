@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+
+{% block title %}SwiftGPT - Server Error{% endblock %}
+
+{% block content %}
+<div class="error-container text-center">
+    <h1>500 - Server Error</h1>
+    <div class="error-icon">
+        <i class="fas fa-exclamation-triangle" style="font-size: 4rem; color: var(--error-color);"></i>
+    </div>
+    <p class="error-message">Sorry, something went wrong on our server.</p>
+    <p>Our team has been notified and we're working to fix the issue.</p>
+    <div class="mt-4">
+        <a href="{{ url_for('index') }}" class="btn btn-primary">
+            <i class="fas fa-home mr-1"></i> Return to Home
+        </a>
+    </div>
+</div>
+{% endblock %}
