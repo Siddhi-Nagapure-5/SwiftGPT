@@ -11,8 +11,8 @@ from utils import get_agent_system_prompt, load_agent_by_id
 # Email configuration
 SMTP_SERVER = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
 SMTP_PORT = int(os.environ.get("SMTP_PORT", 587))
-EMAIL_ADDRESS = os.environ.get("EMAIL_ADDRESS", "siddhinagapure155@gmail.com")
-EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "Siddhi@1234");
+EMAIL_ADDRESS = os.environ.get("EMAIL_ADDRESS", "")
+EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "");
 
 # Initialize scheduler for email scheduling
 scheduler = BackgroundScheduler()
