@@ -87,6 +87,12 @@ Visit `http://127.0.0.1:5000` to use SwiftGPT in your browser.
 
 ---
 
+## Demo
+
+
+Uploading WhatsApp Video 2025-04-30 at 19.43.08_c2d4fa15.mp4…
+
+
 ## 🧐 Future Plans
 
 * Gmail/Outlook OAuth integration
