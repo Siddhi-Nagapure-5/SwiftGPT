@@ -92,7 +92,9 @@ Visit `http://127.0.0.1:5000` to use SwiftGPT in your browser.
 
 
 
-Uploading WhatsApp Video 2025-04-30 at 19.43.08_c2d4fa15.mp4…
+
+https://github.com/user-attachments/assets/2826cad5-6b4a-42ed-9645-0d6b4da443d8
+
 
 
 
